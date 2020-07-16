@@ -28,7 +28,7 @@ import freechips.rocketchip.util.property._
 import boom.bpu._
 import boom.common._
 import boom.exu.{BranchUnitResp, CommitExceptionSignals}
-import boom.util.{BoomCoreStringPrefix}
+import boom.util.{BoomCoreStringPrefix, BoolToChar}
 
 /**
  * Parameters to manage a L1 Banked ICache
@@ -317,6 +317,11 @@ class BoomFrontendModule(outer: BoomFrontend) extends LazyModuleImp(outer)
 
   //-------------------------------------------------------------
   // performance events
+
+  //Print Some Values
+  printf ("Instruction TLB Miss: (%c)   ICache Miss:  (%c)\n", BoolToChar(io.ptw.req.fire(), 'V'), BoolToChar(icache.io.perf.acquire, 'V'))
+
+
   io.cpu.perf.acquire := icache.io.perf.acquire
   io.cpu.perf.tlbMiss := io.ptw.req.fire()
   io.errors := icache.io.errors

@@ -18,7 +18,7 @@ import freechips.rocketchip.rocket._
 
 import boom.common._
 import boom.exu.BrResolutionInfo
-import boom.util.{IsKilledByBranch, GetNewBrMask, BranchKillableQueue, IsOlder, UpdateBrMask, AgePriorityEncoder, WrapInc}
+import boom.util.{BoolToChar, IsKilledByBranch, GetNewBrMask, BranchKillableQueue, IsOlder, UpdateBrMask, AgePriorityEncoder, WrapInc}
 
 class BoomDCacheReqInternal(implicit p: Parameters) extends BoomDCacheReq()(p)
   with HasL1HellaCacheParameters
@@ -534,7 +534,7 @@ class BoomMSHRFile(implicit edge: TLEdgeOut, p: Parameters) extends BoomModule()
     val fence_rdy = Output(Bool())
     val probe_rdy = Output(Bool())
   })
-
+  
   val req_idx = OHToUInt(io.req.map(_.valid))
   val req     = io.req(req_idx)
   val req_is_probe = io.req_is_probe(0)
@@ -545,8 +545,15 @@ class BoomMSHRFile(implicit edge: TLEdgeOut, p: Parameters) extends BoomModule()
   val prefetcher: DataPrefetcher = if (enablePrefetching) Module(new NLPrefetcher)
                                                      else Module(new NullPrefetcher)
 
+                      
   io.prefetch <> prefetcher.io.prefetch
 
+
+  //Print Prefetcher Data
+  //////////////////////////////////////////////////////////////////////
+  printf ("Prefetcher: Address:0x%x Data:0x%x \n", io.prefetch.bits.addr, io.prefetch.bits.data)
+  ///////////////////////////////////////////////////////////////////////
+  
 
   val cacheable = edge.manager.supportsAcquireBFast(req.bits.addr, lgCacheBlockBytes.U)
 
@@ -568,6 +575,16 @@ class BoomMSHRFile(implicit edge: TLEdgeOut, p: Parameters) extends BoomModule()
   val lb = Mem(nLBEntries * cacheDataBeats, UInt(encRowBits.W))
   val lb_read_arb  = Module(new Arbiter(new LineBufferReadReq, cfg.nMSHRs))
   val lb_write_arb = Module(new Arbiter(new LineBufferWriteReq, cfg.nMSHRs))
+///////////////////////////////////////////////////////////////////////
+
+for (i <- 0 until nLBEntries*cacheDataBeats) {
+    
+      printf ("LineBufferEntry [%d] = %x \n", i.U, lb(i))
+  }
+
+////////////////////////////////////////////////////////////////////////
+
+
 
   lb_read_arb.io.out.ready  := false.B
   lb_write_arb.io.out.ready := true.B

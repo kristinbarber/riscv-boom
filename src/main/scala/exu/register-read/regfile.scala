@@ -130,6 +130,10 @@ class RegisterFileSynthesizable(
         0.U,
         regfile(read_addrs(i)))
   }
+  for (i <- 0 until numRegisters) {
+     
+    	printf ("Register Number %d = %x \n", i.U, regfile(i))
+  }
 
   // --------------------------------------------------------------
   // Bypass out of the ALU's write ports.

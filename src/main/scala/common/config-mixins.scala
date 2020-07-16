@@ -24,7 +24,7 @@ case object BoomTilesKey extends Field[Seq[BoomTileParams]](Nil)
 case object BoomCrossingKey extends Field[Seq[RocketCrossingParams]](List(RocketCrossingParams()))
 
 // ---------------------
-// BOOM Configs
+// BOOM Config Fragments
 // ---------------------
 
 /**
@@ -90,7 +90,7 @@ class WithTrace extends Config((site, here, up) => {
 
 /**
  * Create multiple copies of a BOOM tile (and thus a core).
- * Override with the default mixins to control all params of the tiles.
+ * Override with the default fragments to control all params of the tiles.
  * Default adds small BOOMs.
  *
  * @param n amount of tiles to duplicate
@@ -106,7 +106,7 @@ class WithNBoomCores(n: Int) extends Config(
 
 /**
  * Class to renumber BOOM + Rocket harts so that there are no overlapped harts
- * This mixin assumes Rocket tiles are numbered before BOOM tiles
+ * This fragment assumes Rocket tiles are numbered before BOOM tiles
  * Also makes support for multiple harts depend on Rocket + BOOM
  * Note: Must come after all harts are assigned for it to apply
  */
@@ -119,6 +119,7 @@ class WithRenumberHarts(rocketFirst: Boolean = false) extends Config((site, here
   }
   case MaxHartIdBits => log2Up(up(BoomTilesKey, site).size + up(RocketTilesKey, site).size)
 })
+
 
 /**
  * Add a synchronous clock crossing to the tile boundary
@@ -167,6 +168,7 @@ class WithSmallBooms extends Config((site, here, up) => {
       numStqEntries = 8,
       maxBrCount = 4,
       numFetchBufferEntries = 8,
+      enablePrefetching=true,
       ftq = FtqParameters(nEntries=16),
       btb = BoomBTBParameters(btbsa=true, densebtb=false, nSets=64, nWays=2,
                               nRAS=8, tagSz=20, bypassCalls=false, rasCheckForEmpty=false),
@@ -178,7 +180,7 @@ class WithSmallBooms extends Config((site, here, up) => {
       fpu = Some(freechips.rocketchip.tile.FPUParams(sfmaLatency=4, dfmaLatency=4, divSqrt=true))),
     dcache = Some(DCacheParams(rowBits = site(SystemBusKey).beatBits,
                                nSets=64, nWays=4, nMSHRs=2, nTLBEntries=8)),
-    icache = Some(ICacheParams(rowBits = site(SystemBusKey).beatBits, nSets=64, nWays=4, fetchBytes=2*4))
+    icache = Some(ICacheParams(rowBits = site(SystemBusKey).beatBits, nSets=64, nWays=4, fetchBytes=2*4, prefetch=true))
   )}
   case SystemBusKey => up(SystemBusKey, site).copy(beatBytes = 8)
   case XLen => 64

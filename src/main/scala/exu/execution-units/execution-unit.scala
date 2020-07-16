@@ -24,11 +24,12 @@ import freechips.rocketchip.config.{Parameters}
 import freechips.rocketchip.rocket.{BP}
 import freechips.rocketchip.tile.{XLen, RoCCCoreIO}
 import freechips.rocketchip.tile
+import freechips.rocketchip.util.Str
 
 import FUConstants._
 import boom.common._
 import boom.ifu.{GetPCFromFtqIO}
-import boom.util.{ImmGen, IsKilledByBranch, BranchKillableQueue, BoomCoreStringPrefix}
+import boom.util.{BoolToChar, ImmGen, IsKilledByBranch, BranchKillableQueue, BoomCoreStringPrefix}
 
 /**
  * Response from Execution Unit. Bundles a MicroOp with data
@@ -247,8 +248,12 @@ class ALUExeUnit(
     (if (hasMem)  BoomCoreStringPrefix(" - Mem") else "") +
     (if (hasRocc) BoomCoreStringPrefix(" - RoCC") else "")
 
-  override def toString: String = out_str.toString
 
+  ////////////////
+  // printf(p"$out_str\n")
+  ////////////////    
+  override def toString: String = out_str.toString
+  
   val div_busy  = WireInit(false.B)
   val ifpu_busy = WireInit(false.B)
 
@@ -264,9 +269,18 @@ class ALUExeUnit(
                  Mux(!ifpu_busy && hasIfpu.B, FU_I2F, 0.U) |
                  Mux(hasMem.B, FU_MEM, 0.U)
 
+
+
+
+               
+
   // ALU Unit -------------------------------
   var alu: ALUUnit = null
   if (hasAlu) {
+
+    //////////
+    
+    ////////////
     alu = Module(new ALUUnit(isBranchUnit = hasBrUnit,
                              numStages = numBypassStages,
                              dataWidth = xLen))
@@ -286,10 +300,18 @@ class ALUExeUnit(
     alu.io.brinfo <> io.brinfo
 
     iresp_fu_units += alu
-
+    ////////////////
+    printf("IsALUValid? Req:(%c) PC:0x%x\n", BoolToChar(alu.io.req.valid, 'V'), alu.io.req.bits.uop.debug_pc)
+    printf("IsALUValid? Res:(%c) PC:0x%x\n", BoolToChar(alu.io.resp.valid, 'V'), alu.io.resp.bits.uop.debug_pc)
+    
+    ////////////////
     // Bypassing only applies to ALU
     io.bypass <> alu.io.bypass
-
+    ////////////////
+    
+   // printf("IsBypassValid? (%c)\n", BoolToChar(alu.io.bypass.valid(0), 'V'))
+    
+    ////////////////
     // branch unit is embedded inside the ALU
     if (hasBrUnit) {
       io.br_unit <> alu.io.br_unit
@@ -331,6 +353,12 @@ class ALUExeUnit(
     imul.io.req.bits.kill     := io.req.bits.kill
     imul.io.brinfo <> io.brinfo
     iresp_fu_units += imul
+
+    ////////////////
+    printf("IsMulValid? Req:(%c) PC:0x%x\n", BoolToChar(imul.io.req.valid, 'V'), imul.io.req.bits.uop.debug_pc)
+    printf("IsMulValid? Res:(%c) PC:0x%x\n", BoolToChar(imul.io.resp.valid, 'V'), imul.io.resp.bits.uop.debug_pc)
+    ////////////////
+
   }
 
   var ifpu: IntToFPUnit = null
@@ -378,6 +406,10 @@ class ALUExeUnit(
                     (io.req.valid && io.req.bits.uop.fu_code_is(FU_DIV))
 
     iresp_fu_units += div
+    ////////////////
+    printf("IsDivValid? Req:(%c) PC:0x%x\n", BoolToChar(div.io.req.valid, 'V'), div.io.req.bits.uop.debug_pc)
+    printf("IsDivValid? Res:(%c) PC:0x%x\n", BoolToChar(div.io.resp.valid, 'V'), div.io.resp.bits.uop.debug_pc)
+    ////////////////
   }
 
   // Mem Unit --------------------------
@@ -392,7 +424,11 @@ class ALUExeUnit(
     maddrcalc.io.resp.ready := DontCare
     io.bypass <> maddrcalc.io.bypass // TODO this is not where the bypassing should
                                      // occur from, is there any bypassing happening?!
-
+    ////////////////
+    printf("IsMemValid? Req:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.req.valid, 'V'), maddrcalc.io.req.bits.uop.debug_pc)
+    printf("IsMemValid? Res:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.resp.valid, 'V'), maddrcalc.io.resp.bits.uop.debug_pc)
+    ////////////////   
+                              
     io.lsu_io.req := maddrcalc.io.resp
 
     io.ll_iresp <> io.lsu_io.iresp
@@ -420,6 +456,23 @@ class ALUExeUnit(
   assert ((PopCount(iresp_fu_units.map(_.io.resp.valid)) <= 1.U && !div_resp_val) ||
           (PopCount(iresp_fu_units.map(_.io.resp.valid)) <= 2.U && (div_resp_val)),
           "Multiple functional units are fighting over the write port.")
+
+  ///////////////////////
+  /*
+   printf("ExecutionUnitReq: (%c)  uOp:0x%x\n",  
+          Mux(hasMem.B, Str("E"),
+          Mux(hasDiv.B, Str("D"),
+          Mux(hasMul.B, Str("M"),
+          Mux(hasAlu.B, Str("A"),  
+          Str("_"))))), io.req.bits.uop.uopc) 
+   printf("ExecutionUnitRes: (%c)  uOp:0x%x\n",  
+          Mux(hasMem.B, Str("E"),
+          Mux(hasDiv.B, Str("D"),
+          Mux(hasMul.B, Str("M"),
+          Mux(hasAlu.B, Str("A"),  
+          Str("_"))))), io.req.bits.uop.uopc) 
+          */
+  //////////////////////  
 }
 
 /**

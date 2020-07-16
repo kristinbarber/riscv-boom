@@ -29,7 +29,7 @@ import freechips.rocketchip.diplomaticobjectmodel.DiplomaticObjectModelAddressin
 import freechips.rocketchip.diplomaticobjectmodel.model.{OMComponent, OMICache, OMECC}
 
 import boom.common._
-import boom.util.{BoomCoreStringPrefix}
+import boom.util.{BoomCoreStringPrefix, BoolToChar}
 
 /**
  * ICache module

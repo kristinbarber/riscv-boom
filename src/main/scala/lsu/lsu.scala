@@ -101,6 +101,11 @@ class LSUDMemIO(implicit p: Parameters, edge: TLEdgeOut) extends BoomBundle()(p)
   val force_order  = Output(Bool())
   val ordered     = Input(Bool())
 
+  val perf = Input(new Bundle {
+    val acquire = Bool()
+    val release = Bool()
+  })
+
   override def cloneType = new LSUDMemIO().asInstanceOf[this.type]
 }
 
@@ -214,6 +219,11 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
           stq_head === stq_execute_head || stq_tail === stq_execute_head,
             "stq_execute_head got off track.")
 
+
+
+
+
+
   val h_ready :: h_s1 :: h_s2 :: h_s2_nack :: h_wait :: h_replay :: h_dead :: Nil = Enum(7)
   // s1 : do TLB, if success and not killed, fire request go to h_s2
   //      store s1_data to register
@@ -246,6 +256,122 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
 
 
   def widthMap[T <: Data](f: Int => T) = VecInit((0 until memWidth).map(f))
+
+  class EntryData extends Bundle {
+    val ppn = UInt(ppnBits.W)
+    val u = Bool()
+    val g = Bool()
+    val ae = Bool()
+    val sw = Bool()
+    val sx = Bool()
+    val sr = Bool()
+    val pw = Bool()
+    val px = Bool()
+    val pr = Bool()
+    val pal = Bool() // AMO logical
+    val paa = Bool() // AMO arithmetic
+    val eff = Bool() // get/put effects
+    val c = Bool()
+    val fragmented_superpage = Bool()
+  }
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Printing incomming LSU requests and responses
+printf ("IncommingLSUReq: ")
+for (i <- 0 until memWidth) {
+  printf ("PC:0x%x  Address:0x%x (%c)\n", io.core.exe(i).req.bits.uop.debug_pc, io.core.exe(i).req.bits.addr, BoolToChar(io.core.exe(i).req.valid, 'V'))
+         }
+
+printf ("IncommingLSUResp: ")
+for (i <- 0 until memWidth) {
+  printf ("PC:0x%x  Data:0x%x\n", io.core.exe(i).iresp.bits.uop.debug_pc, io.core.exe(i).iresp.bits.data)
+         }
+
+// Printing incomming TLB requests and responses
+printf ("IncommingTLBReq: ")
+for (i <- 0 until memWidth) {
+  printf ("PC:0x%x VirtualAddress:0x%x (%c)\n", dtlb.io.req(i).bits.uop.debug_pc, dtlb.io.req(i).bits.vaddr, BoolToChar(dtlb.io.req(i).valid, 'V'))
+         }
+
+printf ("IncommingTLBResp: ")
+for (i <- 0 until memWidth) {
+  printf ("PC:0x%x DTLBMiss: (%c)  PhysicalAddress:0x%x Miss:%c PageFaultExcep:%c(%c) AccessExcep:%c(%c) MissAlignedExcep:%c(%c) Cacheable:%c Prefetchable:%c\n", 
+    dtlb.io.resp(i).uop.debug_pc,
+    BoolToChar(io.ptw.req.fire(), 'T'),
+    dtlb.io.resp(i).paddr, BoolToChar(dtlb.io.resp(i).miss, 'T'),
+      BoolToChar(dtlb.io.resp(i).pf.ld || dtlb.io.resp(i).pf.st || dtlb.io.resp(i).pf.inst, 'E'), 
+          Mux(dtlb.io.resp(i).pf.ld === 1.B, Str("L"),
+          Mux(dtlb.io.resp(i).pf.st === 1.B, Str("S"),
+          Mux(dtlb.io.resp(i).pf.inst === 1.B, Str("I"), Str("_")))),
+      BoolToChar(dtlb.io.resp(i).ae.ld || dtlb.io.resp(i).ae.st || dtlb.io.resp(i).ae.inst, 'E'),
+          Mux(dtlb.io.resp(i).ae.ld === 1.B, Str("L"),
+          Mux(dtlb.io.resp(i).ae.st === 1.B, Str("S"),
+          Mux(dtlb.io.resp(i).ae.inst === 1.B, Str("I"), Str("_")))),
+      BoolToChar(dtlb.io.resp(i).ma.ld || dtlb.io.resp(i).ma.st || dtlb.io.resp(i).ma.inst, 'E'), 
+          Mux(dtlb.io.resp(i).ma.ld === 1.B, Str("L"),
+          Mux(dtlb.io.resp(i).ma.st === 1.B, Str("S"),
+          Mux(dtlb.io.resp(i).ma.inst === 1.B, Str("I"), Str("_")))), 
+      BoolToChar(dtlb.io.resp(i).cacheable, 'T'),
+      BoolToChar(dtlb.io.resp(i).prefetchable, 'T'))
+         }
+
+
+
+// Printing Cach Req & Resp
+//printf ("CacheReq: Address:%x, Data:%x\n", io.dmem.req.bits(0).bits.addr, io.dmem.req.bits(0).bits.data)
+
+printf ("DCacheReq: ")
+for (i <- 0 until memWidth) {
+  printf ("PC:0x%x, Address:0x%x (%c), Data:0x%x, IsHella: (%c)", io.dmem.req.bits(i).bits.uop.debug_pc, io.dmem.req.bits(i).bits.addr,
+    BoolToChar(io.dmem.req.bits(i).valid, 'V'), io.dmem.req.bits(i).bits.data, BoolToChar(io.dmem.req.bits(i).bits.is_hella, 'V'))
+         }
+printf ("\n")
+printf ("DCacheResp: ")
+for (i <- 0 until memWidth) {
+  printf ("PC:0x%x  Data:0x%x  (%c)  IsHella:  (%c)  Miss:  (%c)   Release:   (%c)", 
+    io.dmem.resp(i).bits.uop.debug_pc, io.dmem.resp(i).bits.data, BoolToChar(io.dmem.resp(i).valid, 'V'), BoolToChar(io.dmem.resp(i).bits.is_hella, 'V'), BoolToChar(io.dmem.perf.acquire, 'V'), BoolToChar(io.dmem.perf.release, 'V'))
+}
+printf ("\n")
+
+
+
+// Trying to print in a more understandable way!
+// (%c)------> (LDQHeadorTail)
+ for (i <- 0 until numLdqEntries) {
+
+      printf ("LoadQueueEntry[%d]: PC:0x%x (%c) Address:0x%x (%c), TLBMiss:%c, Uncacheable:%c, Executed:%c, Ignored:%c, Succeeded:%c, OrderFail:%c, Observed:%c, STList:0x%x, STIdx:0x%x, STForwValid:%c, STForwIdx:0x%x \n", 
+        i.U, ldq(i).bits.uop.debug_pc, Mux(ldq_head === i.U && ldq_tail === i.U, Str("B"),
+          Mux(ldq_head === i.U, Str("H"),
+            Mux(ldq_tail === i.U, Str("T"), Str(" ")))), ldq(i).bits.addr.bits, BoolToChar(ldq(i).bits.addr.valid, 'V'),
+        Mux(ldq(i).bits.addr_is_virtual === 1.B, Str("T"), Str("F")), BoolToChar(ldq(i).bits.addr_is_uncacheable, 'T'), BoolToChar (ldq(i).bits.executed, 'T'), 
+        BoolToChar (ldq(i).bits.execute_ignore, 'T'), BoolToChar (ldq(i).bits.succeeded, 'T'), BoolToChar (ldq(i).bits.order_fail, 'T'), 
+        BoolToChar (ldq(i).bits.observed, 'T'), ldq(i).bits.st_dep_mask , ldq(i).bits.youngest_stq_idx, BoolToChar (ldq(i).bits.forward_std_val, 'T'), 
+        ldq(i).bits.forward_stq_idx)
+  }
+
+
+// This part is to print store queue
+// (%c)(%c)(%c)------> (StQHeadorTail)(StQCommitHead)(StQExeHead)
+    for (i <- 0 until numStqEntries) {
+
+      printf ("StoreQueueEntry[%d]: PC:0x%x (%c)(%c)(%c) Address:0x%x (%c), TLBMiss:%c, Data:0x%x, Committed:%c, Succeeded:%c \n",
+       i.U, stq(i).bits.uop.debug_pc, Mux(stq_head === i.U && stq_tail === i.U, Str("B"),
+          Mux(stq_head === i.U, Str("H"),
+            Mux(stq_tail === i.U, Str("T"), Str(" ")))), Mux(stq_commit_head === i.U, Str("C"), Str(" ")), Mux(stq_execute_head === i.U, Str("E"), Str(" ")),
+             stq(i).bits.addr.bits, BoolToChar(stq(i).bits.addr.valid, 'V'),
+             BoolToChar(stq(i).bits.addr_is_virtual, 'T'), 
+       stq(i).bits.data.bits , 
+       BoolToChar (stq(i).bits.committed, 'T'), BoolToChar (stq(i).bits.succeeded, 'T') )
+
+  }
+
+  printf("/////////////////////////////////////////////////////////////////////////////////////////////////////\n")
+
+  
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 
   //-------------------------------------------------------------
@@ -282,8 +408,8 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
     io.core.stq_full(w)    := stq_full
     io.core.dis_stq_idx(w) := st_enq_idx
 
-    val dis_ld_val = io.core.dis_uops(w).valid && io.core.dis_uops(w).bits.uses_ldq
-    val dis_st_val = io.core.dis_uops(w).valid && io.core.dis_uops(w).bits.uses_stq
+    val dis_ld_val = io.core.dis_uops(w).valid && io.core.dis_uops(w).bits.uses_ldq && !io.core.dis_uops(w).bits.exception
+    val dis_st_val = io.core.dis_uops(w).valid && io.core.dis_uops(w).bits.uses_stq && !io.core.dis_uops(w).bits.exception
     when (dis_ld_val)
     {
       ldq(ld_enq_idx).valid                := true.B
@@ -564,7 +690,7 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
   //--------------------------------------------
   // TLB Access
 
-  assert(hella_req.cmd =/= rocket.M_SFENCE,
+  assert(!(hella_state =/= h_ready && hella_req.cmd === rocket.M_SFENCE),
     "SFENCE through hella interface not supported")
 
   val exe_tlb_uop = widthMap(w =>
@@ -625,6 +751,7 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
     dtlb.io.req(w).bits.size        := exe_size(w)
     dtlb.io.req(w).bits.cmd         := exe_cmd(w)
     dtlb.io.req(w).bits.passthrough := exe_passthr(w)
+    dtlb.io.req(w).bits.uop         := exe_tlb_uop(w)
   }
   dtlb.io.kill                      := exe_kill.reduce(_||_)
   dtlb.io.sfence                    := exe_sfence
@@ -1040,7 +1167,8 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
 
     val block_addr_matches = widthMap(w => lcam_addr(w) >> blockOffBits === l_addr >> blockOffBits)
     val dword_addr_matches = widthMap(w => block_addr_matches(w) && lcam_addr(w)(blockOffBits-1,3) === l_addr(blockOffBits-1,3))
-    val mask_match = widthMap(w => (l_mask & lcam_mask(w)) === l_mask)
+    val mask_match   = widthMap(w => (l_mask & lcam_mask(w)) === l_mask)
+    val mask_overlap = widthMap(w => (l_mask & lcam_mask(w)).orR)
     val l_is_succeeding = succeeding_loads(i)
 
     // Searcher is a store
@@ -1058,7 +1186,8 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
                    ((l_bits.executed && !l_bits.execute_ignore && !executing_loads(i)) || l_bits.succeeded || l_is_succeeding) &&
                    !l_bits.addr_is_virtual                                                                                     &&
                    l_bits.st_dep_mask(lcam_stq_idx(w))                                                                         &&
-                   dword_addr_matches(w)) {
+                   dword_addr_matches(w)                                                                                       &&
+                   mask_overlap(w)) {
         val forwarded_is_older = IsOlder(l_bits.forward_stq_idx, lcam_stq_idx(w), l_bits.youngest_stq_idx)
         // We are older than this load, which overlapped us.
         when (!l_bits.forward_std_val || // If the load wasn't forwarded, it definitely failed
@@ -1075,7 +1204,7 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
                    l_bits.addr.valid          &&
                    !l_bits.addr_is_virtual    &&
                    dword_addr_matches(w)      &&
-                   ((lcam_mask(w) & l_mask) =/= 0.U)) {
+                   mask_overlap(w)) {
         val searcher_is_older = IsOlder(lcam_ldq_idx(w), i.U, ldq_head)
         when (searcher_is_older) {
           when (l_bits.executed        &&
@@ -1598,7 +1727,6 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
   live_store_mask := next_live_store_mask &
                     ~(st_brkilled_mask.asUInt) &
                     ~(st_exc_killed_mask.asUInt)
-
 
 }
 

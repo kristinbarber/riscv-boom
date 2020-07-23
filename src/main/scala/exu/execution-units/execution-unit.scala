@@ -300,9 +300,19 @@ class ALUExeUnit(
     alu.io.brinfo <> io.brinfo
 
     iresp_fu_units += alu
-    ////////////////
-    printf("IsALUValid? Req:(%c) PC:0x%x\n", BoolToChar(alu.io.req.valid, 'V'), alu.io.req.bits.uop.debug_pc)
-    printf("IsALUValid? Res:(%c) PC:0x%x\n", BoolToChar(alu.io.resp.valid, 'V'), alu.io.resp.bits.uop.debug_pc)
+
+    ////////////////////////////////////////////////
+    if (BoolToChar(alu.io.req.valid, 'V') == 'V') {
+        printf("IsALUValid? Req:(%c) PC:0x%x\n", BoolToChar(alu.io.req.valid, 'V'), alu.io.req.bits.uop.debug_pc)
+
+    }
+    if (BoolToChar(alu.io.resp.valid, 'V') == 'V') {
+        printf("IsALUValid? Res:(%c) PC:0x%x\n", BoolToChar(alu.io.resp.valid, 'V'), alu.io.resp.bits.uop.debug_pc)
+
+    }
+    ////////////////////////////////////////////////
+   // printf("IsALUValid? Req:(%c) PC:0x%x\n", BoolToChar(alu.io.req.valid, 'V'), alu.io.req.bits.uop.debug_pc)
+   // printf("IsALUValid? Res:(%c) PC:0x%x\n", BoolToChar(alu.io.resp.valid, 'V'), alu.io.resp.bits.uop.debug_pc)
     
     ////////////////
     // Bypassing only applies to ALU
@@ -354,9 +364,19 @@ class ALUExeUnit(
     imul.io.brinfo <> io.brinfo
     iresp_fu_units += imul
 
+
+
+    if (BoolToChar(imul.io.req.valid, 'V') == 'V') {
+        printf("IsMulValid? Req:(%c) PC:0x%x\n", BoolToChar(imul.io.req.valid, 'V'), imul.io.req.bits.uop.debug_pc)
+
+    }
+    if (BoolToChar(imul.io.resp.valid, 'V') == 'V') {
+        printf("IsMulValid? Res:(%c) PC:0x%x\n", BoolToChar(imul.io.resp.valid, 'V'), imul.io.resp.bits.uop.debug_pc)
+
+    }
     ////////////////
-    printf("IsMulValid? Req:(%c) PC:0x%x\n", BoolToChar(imul.io.req.valid, 'V'), imul.io.req.bits.uop.debug_pc)
-    printf("IsMulValid? Res:(%c) PC:0x%x\n", BoolToChar(imul.io.resp.valid, 'V'), imul.io.resp.bits.uop.debug_pc)
+   // printf("IsMulValid? Req:(%c) PC:0x%x\n", BoolToChar(imul.io.req.valid, 'V'), imul.io.req.bits.uop.debug_pc)
+   // printf("IsMulValid? Res:(%c) PC:0x%x\n", BoolToChar(imul.io.resp.valid, 'V'), imul.io.resp.bits.uop.debug_pc)
     ////////////////
 
   }
@@ -406,9 +426,20 @@ class ALUExeUnit(
                     (io.req.valid && io.req.bits.uop.fu_code_is(FU_DIV))
 
     iresp_fu_units += div
+
+
+    if (BoolToChar(div.io.req.valid, 'V') == 'V') {
+        printf("IsDivValid? Req:(%c) PC:0x%x\n", BoolToChar(div.io.req.valid, 'V'), div.io.req.bits.uop.debug_pc)
+
+    }
+    if (BoolToChar(div.io.resp.valid, 'V') == 'V') {
+        printf("IsDivValid? Res:(%c) PC:0x%x\n", BoolToChar(div.io.resp.valid, 'V'), div.io.resp.bits.uop.debug_pc)
+
+    }
+
     ////////////////
-    printf("IsDivValid? Req:(%c) PC:0x%x\n", BoolToChar(div.io.req.valid, 'V'), div.io.req.bits.uop.debug_pc)
-    printf("IsDivValid? Res:(%c) PC:0x%x\n", BoolToChar(div.io.resp.valid, 'V'), div.io.resp.bits.uop.debug_pc)
+   // printf("IsDivValid? Req:(%c) PC:0x%x\n", BoolToChar(div.io.req.valid, 'V'), div.io.req.bits.uop.debug_pc)
+   // printf("IsDivValid? Res:(%c) PC:0x%x\n", BoolToChar(div.io.resp.valid, 'V'), div.io.resp.bits.uop.debug_pc)
     ////////////////
   }
 
@@ -424,6 +455,16 @@ class ALUExeUnit(
     maddrcalc.io.resp.ready := DontCare
     io.bypass <> maddrcalc.io.bypass // TODO this is not where the bypassing should
                                      // occur from, is there any bypassing happening?!
+
+
+     if (BoolToChar(maddrcalc.io.req.valid, 'V') == 'V') {
+        printf("IsMemValid? Req:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.req.valid, 'V'), maddrcalc.io.req.bits.uop.debug_pc)
+
+    }  
+    if (BoolToChar(maddrcalc.io.resp.valid, 'V') == 'V') {
+        printf("IsMemValid? Res:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.resp.valid, 'V'), maddrcalc.io.resp.bits.uop.debug_pc)
+
+    }                               
     ////////////////
     printf("IsMemValid? Req:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.req.valid, 'V'), maddrcalc.io.req.bits.uop.debug_pc)
     printf("IsMemValid? Res:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.resp.valid, 'V'), maddrcalc.io.resp.bits.uop.debug_pc)

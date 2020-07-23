@@ -909,6 +909,27 @@ class Rob(
       val r_head = rob_head
       val r_tail = rob_tail
 
+// Printing when the write-back happens      
+////////////////////////////////////////////////////////////
+if ((BoolToChar(debug_entry(r_idx+0).valid, 'V') == 'V') & (BoolToChar(debug_entry(r_idx+0).unsafe, 'V') == '-') & (BoolToChar(debug_entry(r_idx+0).busy, 'V') == '-') &
+     (BoolToChar(debug_entry(r_idx+0).unsafe, 'V') == '-') & (BoolToChar((r_head === row.U), 'V') == 'V') &  (BoolToChar((r_tail === row.U), 'V') == '-') )
+{
+  printf("Write-back: PC: 0x%x\n", debug_entry(r_idx+0).uop.debug_pc)
+}
+/*
+if ((r_head === row.U)){
+          if (!(r_tail === row.U)){
+              if (debug_entry(r_idx+0).unsafe === 0.B){
+                  if (debug_entry(r_idx+0).busy === 0.B){
+                     if (debug_entry(r_idx+0).valid === 1.B){
+                        printf("Write-back: PC: 0x%x\n", debug_entry(r_idx+0).uop.debug_pc)
+                     }   
+                  }
+              }
+          }
+      }
+                              
+*/
       printf("    ROB[%d]: %c %c (",
         row.U(robAddrSz.W),
         Mux(r_head === row.U && r_tail === row.U, Str("B"),

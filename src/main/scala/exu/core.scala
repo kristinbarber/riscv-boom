@@ -1262,9 +1262,9 @@ class BoomCore(implicit p: Parameters) extends BoomModule
       // To allow for diffs against spike :/
       def printf_inst(uop: MicroOp) = {
         when (uop.is_rvc) {
-          printf("(0x%x)", uop.debug_inst(15,0))
+          printf("Committed Instruction: (0x%x)", uop.debug_inst(15,0))
         } .otherwise {
-          printf("(0x%x)", uop.debug_inst)
+          printf("Committed Instruction: (0x%x)", uop.debug_inst)
         }
       }
 

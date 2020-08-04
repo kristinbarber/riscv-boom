@@ -915,7 +915,7 @@ class Rob(
 ////////////////////////////////////////////////////////////
 
 
-when ((r_head === row.U)){
+
           when (!(r_tail === row.U)){
               when (debug_entry(r_idx+0).unsafe === 0.B){
                   when (debug_entry(r_idx+0).busy === 0.B){
@@ -925,7 +925,7 @@ when ((r_head === row.U)){
                   }
               }
           }
-      }
+      
                               
 
       printf("    ROB[%d]: %c %c (",

@@ -1131,6 +1131,8 @@ class BoomCore(implicit p: Parameters) extends BoomModule
   //-------------------------------------------------------------
 
   if (DEBUG_PRINTF) {
+    
+
     println("   ~~Chisel Printout Enabled~~")
 
     val numFtqWhitespace = if (DEBUG_PRINTF_FTQ) (ftqSz/4)+1 else 0
@@ -1251,6 +1253,7 @@ class BoomCore(implicit p: Parameters) extends BoomModule
     for (x <- 0 until whitespace) {
       printf("|\n")
     }
+  
   } // End DEBUG_PRINTF
 
 

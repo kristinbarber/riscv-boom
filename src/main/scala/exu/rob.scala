@@ -35,6 +35,7 @@ import freechips.rocketchip.util.Str
 import boom.common._
 import boom.util._
 
+
 /**
  * IO bundle to interact with the ROB
  *
@@ -521,6 +522,7 @@ class Rob(
     // Debug: handle passing out signals to printf in dpath
 
     if (DEBUG_PRINTF_ROB) {
+      
       for (i <- 0 until numRobRows) {
         debug_entry(w + i*coreWidth).valid     := rob_val(i)
         debug_entry(w + i*coreWidth).busy      := rob_bsy(i.U)
@@ -911,17 +913,13 @@ class Rob(
 
 // Printing when the write-back happens      
 ////////////////////////////////////////////////////////////
-if ((BoolToChar(debug_entry(r_idx+0).valid, 'V') == 'V') & (BoolToChar(debug_entry(r_idx+0).unsafe, 'V') == '-') & (BoolToChar(debug_entry(r_idx+0).busy, 'V') == '-') &
-     (BoolToChar(debug_entry(r_idx+0).unsafe, 'V') == '-') & (BoolToChar((r_head === row.U), 'V') == 'V') &  (BoolToChar((r_tail === row.U), 'V') == '-') )
-{
-  printf("Write-back: PC: 0x%x\n", debug_entry(r_idx+0).uop.debug_pc)
-}
-/*
-if ((r_head === row.U)){
-          if (!(r_tail === row.U)){
-              if (debug_entry(r_idx+0).unsafe === 0.B){
-                  if (debug_entry(r_idx+0).busy === 0.B){
-                     if (debug_entry(r_idx+0).valid === 1.B){
+
+
+when ((r_head === row.U)){
+          when (!(r_tail === row.U)){
+              when (debug_entry(r_idx+0).unsafe === 0.B){
+                  when (debug_entry(r_idx+0).busy === 0.B){
+                     when (debug_entry(r_idx+0).valid === 1.B){
                         printf("Write-back: PC: 0x%x\n", debug_entry(r_idx+0).uop.debug_pc)
                      }   
                   }
@@ -929,7 +927,7 @@ if ((r_head === row.U)){
           }
       }
                               
-*/
+
       printf("    ROB[%d]: %c %c (",
         row.U(robAddrSz.W),
         Mux(r_head === row.U && r_tail === row.U, Str("B"),

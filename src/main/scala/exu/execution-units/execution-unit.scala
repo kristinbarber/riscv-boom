@@ -302,11 +302,11 @@ class ALUExeUnit(
     iresp_fu_units += alu
 
     ////////////////////////////////////////////////
-    if (BoolToChar(alu.io.req.valid, 'V') == 'V') {
+    when (alu.io.req.valid === 1.B) {
         printf("IsALUValid? Req:(%c) PC:0x%x\n", BoolToChar(alu.io.req.valid, 'V'), alu.io.req.bits.uop.debug_pc)
 
     }
-    if (BoolToChar(alu.io.resp.valid, 'V') == 'V') {
+    when (alu.io.resp.valid === 1.B) {
         printf("IsALUValid? Res:(%c) PC:0x%x\n", BoolToChar(alu.io.resp.valid, 'V'), alu.io.resp.bits.uop.debug_pc)
 
     }
@@ -318,9 +318,9 @@ class ALUExeUnit(
     // Bypassing only applies to ALU
     io.bypass <> alu.io.bypass
     ////////////////
-    
-   // printf("IsBypassValid? (%c)\n", BoolToChar(alu.io.bypass.valid(0), 'V'))
-    
+    for (i <- 0 until numBypassStages) {
+    printf("IsBypassValid? (%c) PC:0x%x\n", BoolToChar(alu.io.bypass.valid(i), 'V'), alu.io.bypass.uop(i).debug_pc)
+    }
     ////////////////
     // branch unit is embedded inside the ALU
     if (hasBrUnit) {
@@ -366,11 +366,11 @@ class ALUExeUnit(
 
 
 
-    if (BoolToChar(imul.io.req.valid, 'V') == 'V') {
+    when (imul.io.req.valid === 1.B) {
         printf("IsMulValid? Req:(%c) PC:0x%x\n", BoolToChar(imul.io.req.valid, 'V'), imul.io.req.bits.uop.debug_pc)
 
     }
-    if (BoolToChar(imul.io.resp.valid, 'V') == 'V') {
+    when (imul.io.resp.valid === 1.B) {
         printf("IsMulValid? Res:(%c) PC:0x%x\n", BoolToChar(imul.io.resp.valid, 'V'), imul.io.resp.bits.uop.debug_pc)
 
     }
@@ -428,11 +428,11 @@ class ALUExeUnit(
     iresp_fu_units += div
 
 
-    if (BoolToChar(div.io.req.valid, 'V') == 'V') {
+    when (div.io.req.valid === 1.B) {
         printf("IsDivValid? Req:(%c) PC:0x%x\n", BoolToChar(div.io.req.valid, 'V'), div.io.req.bits.uop.debug_pc)
 
     }
-    if (BoolToChar(div.io.resp.valid, 'V') == 'V') {
+    when (div.io.resp.valid === 1.B) {
         printf("IsDivValid? Res:(%c) PC:0x%x\n", BoolToChar(div.io.resp.valid, 'V'), div.io.resp.bits.uop.debug_pc)
 
     }
@@ -457,17 +457,17 @@ class ALUExeUnit(
                                      // occur from, is there any bypassing happening?!
 
 
-     if (BoolToChar(maddrcalc.io.req.valid, 'V') == 'V') {
+     when (maddrcalc.io.req.valid === 1.B) {
         printf("IsMemValid? Req:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.req.valid, 'V'), maddrcalc.io.req.bits.uop.debug_pc)
 
     }  
-    if (BoolToChar(maddrcalc.io.resp.valid, 'V') == 'V') {
+    when (maddrcalc.io.resp.valid === 1.B) {
         printf("IsMemValid? Res:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.resp.valid, 'V'), maddrcalc.io.resp.bits.uop.debug_pc)
 
     }                               
     ////////////////
-    printf("IsMemValid? Req:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.req.valid, 'V'), maddrcalc.io.req.bits.uop.debug_pc)
-    printf("IsMemValid? Res:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.resp.valid, 'V'), maddrcalc.io.resp.bits.uop.debug_pc)
+   //printf("IsMemValid? Req:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.req.valid, 'V'), maddrcalc.io.req.bits.uop.debug_pc)
+    //printf("IsMemValid? Res:(%c) PC:0x%x\n", BoolToChar(maddrcalc.io.resp.valid, 'V'), maddrcalc.io.resp.bits.uop.debug_pc)
     ////////////////   
                               
     io.lsu_io.req := maddrcalc.io.resp

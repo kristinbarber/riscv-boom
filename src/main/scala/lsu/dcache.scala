@@ -60,6 +60,16 @@ class BoomWritebackUnit(implicit edge: TLEdgeOut, p: Parameters) extends L1Hella
 
 
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// Printing Write-back buffer
+printf ("Writeback Buffer: ")
+for (i <- 0 until refillCycles) {
+  printf ("WriteBackBufferEntry [%d] = %x \n", i.U, wb_buffer(i))
+         }
+//////////////////////////////////////////////////////////////////////////////////////////
+
+
+
   val r_address = Cat(req.tag, req.idx) << blockOffBits
   val id = cfg.nMSHRs
   val probeResponse = edge.ProbeAck(

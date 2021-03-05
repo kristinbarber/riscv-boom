@@ -392,6 +392,7 @@ class NBDTLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge
 
 //Printing TLB entries
 
+  if(DEBUG_PRINTF) {
   printf("///////////////////////////////////////\n")
   printf(p"AllEntries = $all_entries\n")
   printf(p"OrdinaryEtries = $ordinary_entries\n")
@@ -435,8 +436,6 @@ class NBDTLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge
     }
   }
 
+ }
 
-         
-/////////////////////
-
-}
+}         

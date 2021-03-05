@@ -318,8 +318,9 @@ class BoomFrontendModule(outer: BoomFrontend) extends LazyModuleImp(outer)
   //-------------------------------------------------------------
   // performance events
 
-  //Print Some Values
-  printf ("Instruction TLB Miss: (%c)   ICache Miss:  (%c)\n", BoolToChar(io.ptw.req.fire(), 'V'), BoolToChar(icache.io.perf.acquire, 'V'))
+  if (DEBUG_PRINTF) {
+    printf ("Instruction TLB Miss: (%c)   ICache Miss:  (%c)\n", BoolToChar(io.ptw.req.fire(), 'V'), BoolToChar(icache.io.perf.acquire, 'V'))
+  }
 
 
   io.cpu.perf.acquire := icache.io.perf.acquire

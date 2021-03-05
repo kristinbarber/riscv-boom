@@ -130,9 +130,11 @@ class RegisterFileSynthesizable(
         0.U,
         regfile(read_addrs(i)))
   }
-  for (i <- 0 until numRegisters) {
-     
-    	printf ("Register Number %d = %x \n", i.U, regfile(i))
+
+  if(REGFILE_PRINTF) {
+    for (i <- 0 until numRegisters) {
+      printf ("PRF[%d]: %x\n", i.U, regfile(i))
+    }
   }
 
   // --------------------------------------------------------------

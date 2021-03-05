@@ -238,7 +238,7 @@ class BoomCore(implicit p: Parameters) extends BoomModule
   // (only used for printf and vcd dumps - the actual counters are in the CSRFile)
   val debug_tsc_reg = RegInit(0.U(xLen.W))
   val debug_irt_reg = RegInit(0.U(xLen.W))
-  debug_tsc_reg := debug_tsc_reg + Mux(O3PIPEVIEW_PRINTF.B, O3_CYCLE_TIME.U, 1.U)
+  debug_tsc_reg := debug_tsc_reg + 1.U //Mux(O3PIPEVIEW_PRINTF.B, O3_CYCLE_TIME.U, 1.U)
   debug_irt_reg := debug_irt_reg + PopCount(rob.io.commit.valids.asUInt)
   dontTouch(debug_tsc_reg)
   dontTouch(debug_irt_reg)
@@ -1130,8 +1130,13 @@ class BoomCore(implicit p: Parameters) extends BoomModule
   //-------------------------------------------------------------
   //-------------------------------------------------------------
 
+  if (CYCLE_PRINTF) {
+      printf("--- Cycle=%d --- Retired Instrs=%d ----------------------------------------------\n",
+          debug_tsc_reg,
+          debug_irt_reg & (0xffffff).U) 
+  }
+
   if (DEBUG_PRINTF) {
-    
 
     println("   ~~Chisel Printout Enabled~~")
 
@@ -1265,9 +1270,9 @@ class BoomCore(implicit p: Parameters) extends BoomModule
       // To allow for diffs against spike :/
       def printf_inst(uop: MicroOp) = {
         when (uop.is_rvc) {
-          printf("Committed Instruction: (0x%x)", uop.debug_inst(15,0))
+          printf("Committed Instruction: DASM(0x%x)", uop.debug_inst(15,0))
         } .otherwise {
-          printf("Committed Instruction: (0x%x)", uop.debug_inst)
+          printf("Committed Instruction: DASM(0x%x)", uop.debug_inst)
         }
       }
 

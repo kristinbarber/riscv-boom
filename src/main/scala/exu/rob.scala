@@ -530,7 +530,8 @@ class Rob(
         debug_entry(w + i*coreWidth).uop       := rob_uop(i.U)
         debug_entry(w + i*coreWidth).exception := rob_exception(i.U)
       }
-    }
+   }
+    
   } //for (w <- 0 until coreWidth)
 
   // **************************************************************************
@@ -1003,7 +1004,8 @@ class Rob(
           debug_entry(temp_idx).uop.stale_pdst)
         temp_idx = temp_idx + 1
       }
-
+      
+      printf("[SN: %d]", debug_entry(r_idx+0).uop.debug_events.fetch_seq)
       r_idx = r_idx + coreWidth
 
       printf("\n")

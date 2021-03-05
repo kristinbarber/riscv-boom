@@ -274,7 +274,8 @@ class LSU(implicit p: Parameters, edge: TLEdgeOut) extends BoomModule()(p)
     val c = Bool()
     val fragmented_superpage = Bool()
   }
-///////////////////////////////////////////////////////////////////////////////////////////////////
+
+if (DEBUG_PRINTF) { 
 // Printing incomming LSU requests and responses
 printf ("IncommingLSUReq: ")
 for (i <- 0 until memWidth) {
@@ -332,20 +333,22 @@ for (i <- 0 until memWidth) {
 }
 printf ("\n")
 
+} //end DEBUG_PRINTF
 
 
+if (LSQ_PRINTF) {
 // Trying to print in a more understandable way!
 // (%c)------> (LDQHeadorTail)
  for (i <- 0 until numLdqEntries) {
 
-      printf ("LoadQueueEntry[%d]: PC:0x%x (%c) Address:0x%x (%c), TLBMiss:%c, Uncacheable:%c, Executed:%c, Ignored:%c, Succeeded:%c, OrderFail:%c, Observed:%c, STList:0x%x, STIdx:0x%x, STForwValid:%c, STForwIdx:0x%x \n", 
+      printf ("LoadQueueEntry[%d]: PC:0x%x (%c) Address:0x%x (%c), TLBMiss:%c, Uncacheable:%c, Executed:%c, Ignored:%c, Succeeded:%c, OrderFail:%c, Observed:%c, STList:0x%x, STIdx:0x%x, STForwValid:%c, STForwIdx:0x%x [SN: %d]\n", 
         i.U, ldq(i).bits.uop.debug_pc, Mux(ldq_head === i.U && ldq_tail === i.U, Str("B"),
           Mux(ldq_head === i.U, Str("H"),
             Mux(ldq_tail === i.U, Str("T"), Str(" ")))), ldq(i).bits.addr.bits, BoolToChar(ldq(i).bits.addr.valid, 'V'),
         Mux(ldq(i).bits.addr_is_virtual === 1.B, Str("T"), Str("F")), BoolToChar(ldq(i).bits.addr_is_uncacheable, 'T'), BoolToChar (ldq(i).bits.executed, 'T'), 
         BoolToChar (ldq(i).bits.execute_ignore, 'T'), BoolToChar (ldq(i).bits.succeeded, 'T'), BoolToChar (ldq(i).bits.order_fail, 'T'), 
         BoolToChar (ldq(i).bits.observed, 'T'), ldq(i).bits.st_dep_mask , ldq(i).bits.youngest_stq_idx, BoolToChar (ldq(i).bits.forward_std_val, 'T'), 
-        ldq(i).bits.forward_stq_idx)
+        ldq(i).bits.forward_stq_idx, ldq(i).bits.uop.debug_events.fetch_seq)
   }
 
 
@@ -353,26 +356,20 @@ printf ("\n")
 // (%c)(%c)(%c)------> (StQHeadorTail)(StQCommitHead)(StQExeHead)
     for (i <- 0 until numStqEntries) {
 
-      printf ("StoreQueueEntry[%d]: PC:0x%x (%c)(%c)(%c) Address:0x%x (%c), TLBMiss:%c, Data:0x%x, Committed:%c, Succeeded:%c \n",
+      printf ("StoreQueueEntry[%d]: PC:0x%x (%c)(%c)(%c) Address:0x%x (%c), TLBMiss:%c, Data:0x%x, Committed:%c, Succeeded:%c [SN: %d]\n",
        i.U, stq(i).bits.uop.debug_pc, Mux(stq_head === i.U && stq_tail === i.U, Str("B"),
           Mux(stq_head === i.U, Str("H"),
             Mux(stq_tail === i.U, Str("T"), Str(" ")))), Mux(stq_commit_head === i.U, Str("C"), Str(" ")), Mux(stq_execute_head === i.U, Str("E"), Str(" ")),
              stq(i).bits.addr.bits, BoolToChar(stq(i).bits.addr.valid, 'V'),
              BoolToChar(stq(i).bits.addr_is_virtual, 'T'), 
        stq(i).bits.data.bits , 
-       BoolToChar (stq(i).bits.committed, 'T'), BoolToChar (stq(i).bits.succeeded, 'T') )
+       BoolToChar (stq(i).bits.committed, 'T'), BoolToChar (stq(i).bits.succeeded, 'T'), stq(i).bits.uop.debug_events.fetch_seq )
 
   }
 
   printf("/////////////////////////////////////////////////////////////////////////////////////////////////////\n")
 
-  
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
+} //end LSQ_PRINTF
 
   //-------------------------------------------------------------
   //-------------------------------------------------------------

@@ -598,7 +598,7 @@ class FetchControlUnit(implicit p: Parameters) extends BoomModule
           // Also not factoring in NPC.
           printf("%d; O3PipeView:fetch:%d:0x%x:0:%d:DASM(%x)\n",
             bundle.debug_events(i).fetch_seq,
-            io.tsc_reg - (2*O3_CYCLE_TIME).U,
+            io.tsc_reg, // - (2*O3_CYCLE_TIME).U,
             f3_debug_pcs(i),
             bundle.debug_events(i).fetch_seq,
             bundle.insts(i))
